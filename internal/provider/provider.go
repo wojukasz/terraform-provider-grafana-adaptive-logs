@@ -177,6 +177,8 @@ func (p *AdaptiveLogsProvider) Configure(ctx context.Context, req provider.Confi
 func (p *AdaptiveLogsProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		newSegmentResource,
+		newDropRuleResource,
+		newExemptionResource,
 	}
 }
 
