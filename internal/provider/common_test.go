@@ -40,11 +40,12 @@ func CheckAccTestsEnabled(t *testing.T) {
 // envelopes: segments and drop-rules list as bare arrays, exemptions list
 // wrapped as {"result": [...]}.
 type fakeAdaptiveLogsAPI struct {
-	mu         sync.Mutex
-	segments   map[string]model.Segment
-	dropRules  map[string]model.DropRule
-	exemptions map[string]model.Exemption
-	nextID     int
+	mu              sync.Mutex
+	segments        map[string]model.Segment
+	dropRules       map[string]model.DropRule
+	exemptions      map[string]model.Exemption
+	recommendations []model.Recommendation
+	nextID          int
 }
 
 func newFakeAdaptiveLogsAPI() *fakeAdaptiveLogsAPI {
@@ -63,7 +64,14 @@ func (f *fakeAdaptiveLogsAPI) Server() *httptest.Server {
 	mux.HandleFunc("/adaptive-logs/drop-rules/", f.handleDropRuleSingle)
 	mux.HandleFunc("/adaptive-logs/exemptions", f.handleExemptionListCreate)
 	mux.HandleFunc("/adaptive-logs/exemptions/", f.handleExemptionSingle)
+	mux.HandleFunc("/adaptive-logs/recommendations", f.handleRecommendationsList)
 	return httptest.NewServer(mux)
+}
+
+func (f *fakeAdaptiveLogsAPI) handleRecommendationsList(w http.ResponseWriter, _ *http.Request) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	writeJSON(w, http.StatusOK, f.recommendations)
 }
 
 func (f *fakeAdaptiveLogsAPI) id(prefix string) string {
