@@ -45,6 +45,7 @@ type fakeAdaptiveLogsAPI struct {
 	dropRules       map[string]model.DropRule
 	exemptions      map[string]model.Exemption
 	recommendations []model.Recommendation
+	labelValues     map[string][]string
 	nextID          int
 }
 
@@ -65,6 +66,7 @@ func (f *fakeAdaptiveLogsAPI) Server() *httptest.Server {
 	mux.HandleFunc("/adaptive-logs/exemptions", f.handleExemptionListCreate)
 	mux.HandleFunc("/adaptive-logs/exemptions/", f.handleExemptionSingle)
 	mux.HandleFunc("/adaptive-logs/recommendations", f.handleRecommendationsList)
+	mux.HandleFunc("/loki/api/v1/label/", f.handleLabelValues)
 	return httptest.NewServer(mux)
 }
 
@@ -72,6 +74,18 @@ func (f *fakeAdaptiveLogsAPI) handleRecommendationsList(w http.ResponseWriter, _
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	writeJSON(w, http.StatusOK, f.recommendations)
+}
+
+func (f *fakeAdaptiveLogsAPI) handleLabelValues(w http.ResponseWriter, r *http.Request) {
+	label := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/loki/api/v1/label/"), "/values")
+
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"status": "success",
+		"data":   f.labelValues[label],
+	})
 }
 
 func (f *fakeAdaptiveLogsAPI) id(prefix string) string {
