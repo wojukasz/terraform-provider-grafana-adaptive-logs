@@ -183,7 +183,9 @@ func (p *AdaptiveLogsProvider) Resources(_ context.Context) []func() resource.Re
 }
 
 func (p *AdaptiveLogsProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		newRecommendationsDataSource,
+	}
 }
 
 func New(version string, commit string) func() provider.Provider {
